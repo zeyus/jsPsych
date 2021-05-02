@@ -31,6 +31,8 @@
     var start_time = performance.now();
     var load_time;
 
+    display_element.innerHTML = '<p>Initializing camera...</p>';
+
     if (!jsPsych.extensions.webgazer.isInitialized()) {
       jsPsych.extensions.webgazer.start().then(function () {
         showTrial();
