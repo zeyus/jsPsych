@@ -41,7 +41,8 @@
         on_finish: function(data) {
             n_trials = parseInt(data.response.n_trials, 10);
             buffer_length = parseInt(data.response.buffer_length, 10);
-        }
+        },
+        data: {task: 'enter_trial_info'}
     };
     timeline.push(enter_trial_info);
 
@@ -52,12 +53,14 @@
         '<p>Then the browser will record audio for 2 seconds.</p>'+
         '<p>You will then see an audio player and you will be able to play back your recording.</p>'+
         '<p>You can re-record as many times as necessary to ensure that,<br>during the test, the audio will be captured clearly.</p>',
-        choices: ['Start the recording check']
+        choices: ['Start the recording check'],
+        data: {task: 'audio_check_start'}
     };
     timeline.push(audio_check_start);
 
     var init_mic = {
       type: jsPsychInitializeMicrophone,
+      data: {task: 'init_mic'}
     }
     timeline.push(init_mic);
 
@@ -66,6 +69,7 @@
         stimulus: `<div style="width:200px; height: 200px; background: white;"></div>`,
         recording_duration: 2000,
         allow_playback: true,
+        data: {task: 'audio_check'}
     };
     timeline.push(audio_check);
 
@@ -73,7 +77,8 @@
         type: jsPsychHtmlButtonResponse,
         stimulus: '<p>Press the "Start" button to start the audio recording test.</p>',
         choices: ['Start'],
-        post_trial_gap: 1000
+        post_trial_gap: 1000,
+        data: {task: 'start'}
     };
     timeline.push(start);
 
@@ -85,7 +90,8 @@
         recording_duration: function() {return buffer_length;},
         post_trial_gap: function() {
             return jsPsych.randomization.sampleWithoutReplacement(iti_durations,1)[0];
-        }
+        },
+        data: {task: 'trial'}
     };
 
     var trial_loop = {
@@ -104,7 +110,8 @@
     var end = {
         type: jsPsychHtmlButtonResponse,
         stimulus: '<p>The test has finished.</p>',
-        choices: ['Done']
+        choices: ['Done'],
+        data: {task: 'done'}
     };
     timeline.push(end);
 
