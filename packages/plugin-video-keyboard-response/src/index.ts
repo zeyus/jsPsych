@@ -16,6 +16,11 @@ const info = <const>{
       pretty_name: "Choices",
       default: "ALL_KEYS",
     },
+    /** Maximum number of keypresses allowed. */
+    max_responses: {
+      type: ParameterType.INT,
+      default: 1,
+    },
     /** Any content here will be displayed below the stimulus. */
     prompt: {
       type: ParameterType.HTML_STRING,
@@ -185,7 +190,7 @@ class VideoKeyboardResponsePlugin implements JsPsychPlugin<Info> {
           callback_function: after_response,
           valid_responses: trial.choices,
           rt_method: "performance",
-          persist: false,
+          persist: trial.max_responses > 1 ? true : false,
           allow_held_key: false,
         });
       }
@@ -243,10 +248,8 @@ class VideoKeyboardResponsePlugin implements JsPsychPlugin<Info> {
     }
 
     // store response
-    var response = {
-      rt: null,
-      key: null,
-    };
+    let response = null;
+    let rt = null;
 
     // function to end trial when it is time
     const end_trial = () => {
@@ -267,9 +270,9 @@ class VideoKeyboardResponsePlugin implements JsPsychPlugin<Info> {
 
       // gather the data to store for the trial
       var trial_data = {
-        rt: response.rt,
+        rt: rt,
         stimulus: trial.stimulus,
-        response: response.key,
+        response: response,
       };
 
       // clear the display
@@ -286,14 +289,25 @@ class VideoKeyboardResponsePlugin implements JsPsychPlugin<Info> {
       display_element.querySelector("#jspsych-video-keyboard-response-stimulus").className +=
         " responded";
 
-      // only record the first response
-      if (response.key == null) {
-        response = info;
-      }
-
-      if (trial.response_ends_trial) {
-        end_trial();
-      }
+        if(trial.max_responses == 1){
+          response = info.key;
+          rt = info.rt;
+        } else {
+          if(response === null){
+            response = [];
+            rt = [];
+          } 
+          response.push(info.key);
+          rt.push(info.rt);
+        }
+        
+        if (trial.response_ends_trial) {
+          if(trial.max_responses == 1){
+            end_trial();
+          } else if(response.length == trial.max_responses){
+            end_trial();
+          }
+        }
     };
 
     // start the response listener
