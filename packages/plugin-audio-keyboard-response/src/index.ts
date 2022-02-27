@@ -15,6 +15,11 @@ const info = <const>{
       pretty_name: "Choices",
       default: "ALL_KEYS",
     },
+    /** Maximum number of keypresses allowed. */
+    max_responses: {
+      type: ParameterType.INT,
+      default: 1,
+    },
     /** Any content here will be displayed below the stimulus. */
     prompt: {
       type: ParameterType.HTML_STRING,
@@ -72,10 +77,8 @@ class AudioKeyboardResponsePlugin implements JsPsychPlugin<Info> {
     var context = this.jsPsych.pluginAPI.audioContext();
 
     // store response
-    var response = {
-      rt: null,
-      key: null,
-    };
+    let response = null;
+    let rt = null;
 
     // record webaudio context start time
     var startTime;
@@ -158,9 +161,9 @@ class AudioKeyboardResponsePlugin implements JsPsychPlugin<Info> {
 
       // gather the data to store for the trial
       var trial_data = {
-        rt: response.rt,
+        rt: rt,
         stimulus: trial.stimulus,
-        response: response.key,
+        response: response,
       };
 
       // clear the display
@@ -174,37 +177,38 @@ class AudioKeyboardResponsePlugin implements JsPsychPlugin<Info> {
 
     // function to handle responses by the subject
     function after_response(info) {
-      // only record the first response
-      if (response.key == null) {
-        response = info;
+      if(trial.max_responses == 1){
+        response = info.key;
+        rt = info.rt;
+      } else {
+        if(response === null){
+          response = [];
+          rt = [];
+        } 
+        response.push(info.key);
+        rt.push(info.rt);
       }
-
+      
       if (trial.response_ends_trial) {
-        end_trial();
+        if(trial.max_responses == 1){
+          end_trial();
+        } else if(response.length == trial.max_responses){
+          end_trial();
+        }
       }
     }
 
     const setup_keyboard_listener = () => {
       // start the response listener
-      if (context !== null) {
-        this.jsPsych.pluginAPI.getKeyboardResponse({
-          callback_function: after_response,
-          valid_responses: trial.choices,
-          rt_method: "audio",
-          persist: false,
-          allow_held_key: false,
-          audio_context: context,
-          audio_context_start_time: startTime,
-        });
-      } else {
-        this.jsPsych.pluginAPI.getKeyboardResponse({
-          callback_function: after_response,
-          valid_responses: trial.choices,
-          rt_method: "performance",
-          persist: false,
-          allow_held_key: false,
-        });
-      }
+      this.jsPsych.pluginAPI.getKeyboardResponse({
+        callback_function: after_response,
+        valid_responses: trial.choices,
+        rt_method: context !== null ? "audio" : "performance",
+        persist: trial.max_responses <= 1 ? false : true,
+        allow_held_key: false,
+        audio_context: context,
+        audio_context_start_time: startTime,
+      });
     };
 
     return new Promise((resolve) => {
