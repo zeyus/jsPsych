@@ -270,6 +270,14 @@ const info = <const>{
       pretty_name: "Required question label",
       default: "*",
     },
+    /**
+     * Allow registering a callback function that will be called when the question is rendered.
+     */
+     on_render_question_complete: {
+      type: ParameterType.FUNCTION,
+      pretty_name: "Event fired when question is rendered to the DOM",
+      default: null,
+    },
   },
 };
 
@@ -429,6 +437,11 @@ class SurveyPlugin implements JsPsychPlugin<Info> {
     // initialize trial data
     this.trial_data.accuracy = [];
     this.trial_data.question_order = [];
+
+    if (trial.on_render_question_complete !== null
+      && typeof trial.on_render_question_complete === "function") {
+      this.survey.onAfterRenderQuestion.add(trial.on_render_question_complete);
+    }
 
     // response scoring function
     const score_response = (sender, options) => {
@@ -709,7 +722,7 @@ class SurveyPlugin implements JsPsychPlugin<Info> {
 
       case "ranking":
         question = new QuestionRanking(name);
-        question.fallbackToSortableJS = true;
+        // question.fallbackToSortableJS = true;
         break;
     }
 
