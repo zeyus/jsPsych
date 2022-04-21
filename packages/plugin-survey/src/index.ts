@@ -283,7 +283,15 @@ const info = <const>{
      */
      on_render_survey_complete: {
       type: ParameterType.FUNCTION,
-      pretty_name: "Event fired when question is rendered to the DOM",
+      pretty_name: "Event fired when survey is rendered to the DOM",
+      default: null,
+    },
+    /**
+     * Allow registering a callback function that will be called when the survey page is rendered.
+     */
+     on_render_page_complete: {
+      type: ParameterType.FUNCTION,
+      pretty_name: "Event fired when page is rendered to the DOM",
       default: null,
     },
   },
@@ -446,15 +454,22 @@ class SurveyPlugin implements JsPsychPlugin<Info> {
     this.trial_data.accuracy = [];
     this.trial_data.question_order = [];
 
-    if (trial.on_render_question_complete !== null
-      && typeof trial.on_render_question_complete === "function") {
-      this.survey.onAfterRenderQuestion.add(trial.on_render_question_complete);
+    if (trial.on_render_page_complete !== null
+      && typeof trial.on_render_page_complete === "function") {
+      this.survey.onAfterRenderPage.add(trial.on_render_page_complete);
     }
 
     if (trial.on_render_survey_complete !== null
       && typeof trial.on_render_survey_complete === "function") {
       this.survey.onAfterRenderSurvey.add(trial.on_render_survey_complete);
     }
+
+    if (trial.on_render_question_complete !== null
+      && typeof trial.on_render_question_complete === "function") {
+      this.survey.onAfterRenderQuestion.add(trial.on_render_question_complete);
+    }
+
+    
 
     // response scoring function
     const score_response = (sender, options) => {
