@@ -278,6 +278,14 @@ const info = <const>{
       pretty_name: "Event fired when question is rendered to the DOM",
       default: null,
     },
+    /**
+     * Allow registering a callback function that will be called when the survey is rendered.
+     */
+     on_render_survey_complete: {
+      type: ParameterType.FUNCTION,
+      pretty_name: "Event fired when question is rendered to the DOM",
+      default: null,
+    },
   },
 };
 
@@ -441,6 +449,11 @@ class SurveyPlugin implements JsPsychPlugin<Info> {
     if (trial.on_render_question_complete !== null
       && typeof trial.on_render_question_complete === "function") {
       this.survey.onAfterRenderQuestion.add(trial.on_render_question_complete);
+    }
+
+    if (trial.on_render_survey_complete !== null
+      && typeof trial.on_render_survey_complete === "function") {
+      this.survey.onAfterRenderSurvey.add(trial.on_render_survey_complete);
     }
 
     // response scoring function
